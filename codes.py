@@ -6,12 +6,12 @@ import requests
 from bs4 import BeautifulSoup
 
 
-_some_codes_file_name = 'codes/%s_codes.csv'
-_crypto_codes_file_name = _some_codes_file_name % 'crypto'
-_common_codes_file_name = _some_codes_file_name % 'common'
+_codes_file_name = 'codes/%s_codes.csv'
+_crypto_codes_file_name = _codes_file_name % 'crypto'
+_common_codes_file_name = _codes_file_name % 'common'
 
 
-def _load_codes() -> dict:
+def _load_codes():
     cbr_url = 'http://www.cbr.ru/scripts/XML_daily_eng.asp'
     poloniex_url = 'https://poloniex.com/public?'
     try:
@@ -30,12 +30,13 @@ def _load_codes() -> dict:
     return cur_codes
 
 
-def _write_codes(cur_codes: dict):
+def _save_codes(cur_codes: dict):
     dir_name = os.path.dirname(_common_codes_file_name)
     if not os.path.isdir(dir_name):
         os.mkdir(dir_name)
-    crypto_cur_codes = [[code, name] for (code, name) in cur_codes['crypto'].items()]
-    common_cur_codes = [[code, name] for (code, name) in cur_codes['common'].items()]
+    crypto_cur_codes = cur_codes['crypto'].items()
+    common_cur_codes = cur_codes['common'].items()
+
     with open(_crypto_codes_file_name, 'w', newline='') as file:
         writer = csv.writer(file)
         writer.writerows(crypto_cur_codes)
@@ -47,7 +48,7 @@ def _write_codes(cur_codes: dict):
 def get_codes() -> dict:
     if not (os.path.isfile(_common_codes_file_name) and os.path.isfile(_crypto_codes_file_name)):
         cur_codes = _load_codes()
-        _write_codes(cur_codes)
+        _save_codes(cur_codes)
         return cur_codes
     with open(_common_codes_file_name, 'r', newline='') as file:
         reader = csv.reader(file)
@@ -62,11 +63,11 @@ def get_codes() -> dict:
 def _is_some_code(code: str, cur_type: str):
     if not (os.path.isfile(_common_codes_file_name) and os.path.isfile(_crypto_codes_file_name)):
         cur_codes = _load_codes()
-        _write_codes(cur_codes)
-        return code in cur_codes['common'].append(cur_codes['crypto'])
-    with open(_some_codes_file_name % cur_type) as file:
-        for a in file:
-            if re.match(r'\b%s,' % code, a) is not None:
+        _save_codes(cur_codes)
+        return code in cur_codes['common'].update(cur_codes['crypto'])
+    with open(_codes_file_name % cur_type) as file:
+        for line in file:
+            if re.match(r'\b%s,' % code, line) is not None:
                 return True
     return False
 

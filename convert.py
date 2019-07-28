@@ -40,7 +40,7 @@ def _common2crypto_rates(from_currency_code, to_currency_code, from_date, to_dat
 
 
 def get_rates(from_currency_code: str, to_currency_code: str,
-              from_date: datetime.date = datetime.date.today() - datetime.timedelta(days = 1),
+              from_date: datetime.date = datetime.date.today() - datetime.timedelta(days=1),
               to_date: datetime.date = datetime.date.today()):
     if is_crypto_code(from_currency_code):
         if is_crypto_code(to_currency_code):

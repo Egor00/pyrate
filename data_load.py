@@ -4,7 +4,7 @@ import requests
 from bs4 import BeautifulSoup
 
 
-def get_common_rates(cur_code: str, from_date: datetime.date = datetime.date.today() - datetime.timedelta(days = 1),
+def get_common_rates(cur_code: str, from_date: datetime.date = datetime.date.today() - datetime.timedelta(days=1),
                      to_date: datetime.date = datetime.date.today()):
     """
     Downloads currency exchange rates against the ruble.
@@ -41,20 +41,20 @@ def _get_cbr_rate(cur_code: str, date: datetime.date = datetime.date.today()):
     return rate
 
 
-def get_crypto_rates(cur_code: str, from_date: datetime.date = datetime.date.today() - datetime.timedelta(days = 1),
+def get_crypto_rates(cur_code: str, from_date: datetime.date = datetime.date.today() - datetime.timedelta(days=1),
                      to_date: datetime.date = datetime.date.today()):
     if cur_code == 'BTC':
-        dates = {from_date + datetime.timedelta(days=i): 1 for i in range((to_date-from_date).days)}
-        return dates
-    url = 'https://poloniex.com/public?'
+        rates = {from_date + datetime.timedelta(days=i): 1 for i in range((to_date - from_date).days)}
+        return rates
+    poloniex_url = 'https://poloniex.com/public?'
     try:
         start_time = datetime.datetime.combine(from_date, datetime.time()).timestamp()
         end_time = datetime.datetime.combine(to_date, datetime.time()).timestamp()
-        response = requests.get(url, timeout=5, params={'command': 'returnChartData',
-                                                        'currencyPair': 'BTC_%s' % cur_code,
-                                                        'start': start_time,
-                                                        'end': end_time,
-                                                        'period': 86400}).json()  # 1 day = 86400 seconds
+        response = requests.get(poloniex_url, timeout=5, params={'command': 'returnChartData',
+                                                                 'currencyPair': 'BTC_%s' % cur_code,
+                                                                 'start': start_time,
+                                                                 'end': end_time,
+                                                                 'period': 86400}).json()  # 1 day = 86400 seconds
     except (requests.exceptions.ConnectionError, requests.exceptions.HTTPError, requests.exceptions.ReadTimeout):
         raise ConnectionError('Can not get data from poloniex.com')
     try:
@@ -66,16 +66,13 @@ def get_crypto_rates(cur_code: str, from_date: datetime.date = datetime.date.tod
     return rates
 
 
-def get_btc_rates(from_date: datetime.date = datetime.date.today() - datetime.timedelta(days = 1),
+def get_btc_rates(from_date: datetime.date = datetime.date.today() - datetime.timedelta(days=1),
                   to_date: datetime.date = datetime.date.today()):
-    url = 'https://api.coindesk.com/v1/bpi/historical/close.json'
+    coindesk_url = 'https://api.coindesk.com/v1/bpi/historical/close.json'
     try:
-        response = requests.get(url, timeout=5, params={'start': from_date.strftime('%Y-%m-%d'),
-                                                        'end': to_date.strftime('%Y-%m-%d')}).json()
+        response = requests.get(coindesk_url, timeout=5, params={'start': from_date.strftime('%Y-%m-%d'),
+                                                                 'end': to_date.strftime('%Y-%m-%d')}).json()
     except (requests.exceptions.ConnectionError, requests.exceptions.HTTPError, requests.exceptions.ReadTimeout) as e:
         raise ConnectionError('Can not get data from coindesk.com', e)
-
     rates = {datetime.datetime.strptime(date, '%Y-%m-%d').date(): response['bpi'][date] for date in response['bpi']}
     return rates
-
-
