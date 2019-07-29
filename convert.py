@@ -7,6 +7,9 @@ from data_load import get_crypto_rates, get_common_rates, get_btc_rates
 
 
 def _crypto2crypto_rates(from_currency_code, to_currency_code, from_date, to_date):
+    """
+    Returns the exchange rate statistics of one crypto currency to another in the specified interval
+    """
     if from_currency_code == to_currency_code:
         return [1] * (to_date - from_date).days
     from_currency_rates = pd.Series(get_crypto_rates(from_currency_code, from_date, to_date))
@@ -16,6 +19,9 @@ def _crypto2crypto_rates(from_currency_code, to_currency_code, from_date, to_dat
 
 
 def _common2common_rates(from_currency_code, to_currency_code, from_date, to_date):
+    """
+    Returns the exchange rate statistics of one regular currency to another in the specified interval
+    """
     if from_currency_code == to_currency_code:
         return [1] * (to_date - from_date).days
     from_currency_rates = pd.Series(get_common_rates(from_currency_code, from_date, to_date))
@@ -25,6 +31,9 @@ def _common2common_rates(from_currency_code, to_currency_code, from_date, to_dat
 
 
 def _crypto2common_rates(from_currency_code, to_currency_code, from_date, to_date):
+    """
+    Returns the exchange rate statistics of crypto currency to regular one in the specified interval
+    """
     from_currency_rates = pd.Series(get_crypto_rates(from_currency_code, from_date, to_date))
     to_currency_rates = pd.Series(get_common_rates(to_currency_code, from_date, to_date))
     btc_rates = pd.Series(get_btc_rates(from_date, to_date))
@@ -34,6 +43,9 @@ def _crypto2common_rates(from_currency_code, to_currency_code, from_date, to_dat
 
 
 def _common2crypto_rates(from_currency_code, to_currency_code, from_date, to_date):
+    """
+    Returns the exchange rate statistics of one crypto currency to another in the specified interval
+    """
     inverse_rates = pd.Series(_crypto2common_rates(to_currency_code, from_currency_code, from_date, to_date))
     rates = dict(1 / inverse_rates)
     return rates
@@ -42,6 +54,10 @@ def _common2crypto_rates(from_currency_code, to_currency_code, from_date, to_dat
 def get_rates(from_currency_code: str, to_currency_code: str,
               from_date: datetime.date = datetime.date.today() - datetime.timedelta(days=1),
               to_date: datetime.date = datetime.date.today()):
+    """
+    Determines the type of currencies by their codes and returns statistics for
+    the specified period. Raises ValueError if code is incorrect.
+    """
     if is_crypto_code(from_currency_code):
         if is_crypto_code(to_currency_code):
             return _crypto2crypto_rates(from_currency_code, to_currency_code, from_date, to_date)

@@ -8,8 +8,6 @@ def get_common_rates(cur_code: str, from_date: datetime.date = datetime.date.tod
                      to_date: datetime.date = datetime.date.today()):
     """
     Downloads currency exchange rates against the ruble.
-
-
     """
     rates = {}
     cur_code = cur_code.upper()
@@ -26,6 +24,9 @@ def get_common_rates(cur_code: str, from_date: datetime.date = datetime.date.tod
 
 
 def _get_cbr_rate(cur_code: str, date: datetime.date = datetime.date.today()):
+    """
+    Downloads exchange rates on the specified day from cbr.ru
+    """
     url = 'http://www.cbr.ru/scripts/XML_daily_eng.asp'
     try:
         response = requests.get(url, timeout=5, params={'date_req': date.strftime('%d.%m.%Y')})
@@ -43,6 +44,10 @@ def _get_cbr_rate(cur_code: str, date: datetime.date = datetime.date.today()):
 
 def get_crypto_rates(cur_code: str, from_date: datetime.date = datetime.date.today() - datetime.timedelta(days=1),
                      to_date: datetime.date = datetime.date.today()):
+    """
+    Downloads currency exchange rates against BTC, using poloniex.com API.
+    Raises ConnectionError if cannot get response or ValueError if poloniex return error
+    """
     if cur_code == 'BTC':
         rates = {from_date + datetime.timedelta(days=i): 1 for i in range((to_date - from_date).days)}
         return rates
@@ -68,6 +73,10 @@ def get_crypto_rates(cur_code: str, from_date: datetime.date = datetime.date.tod
 
 def get_btc_rates(from_date: datetime.date = datetime.date.today() - datetime.timedelta(days=1),
                   to_date: datetime.date = datetime.date.today()):
+    """
+    Downloads BTC rates using coindesk.com API. Raises ConnectionError if cannot
+    get response.
+    """
     coindesk_url = 'https://api.coindesk.com/v1/bpi/historical/close.json'
     try:
         response = requests.get(coindesk_url, timeout=5, params={'start': from_date.strftime('%Y-%m-%d'),

@@ -6,12 +6,17 @@ import requests
 from bs4 import BeautifulSoup
 
 
-_codes_file_name = 'codes/%s_codes.csv'
+_codes_file_name = os.path.join('codes', '%s_codes.csv')
 _crypto_codes_file_name = _codes_file_name % 'crypto'
 _common_codes_file_name = _codes_file_name % 'common'
 
 
 def _load_codes():
+    """
+    Loads regular and crypto currency codes. Uses cbr.ru for regular currencies
+    and poloniex.com for crypto. Raises ConnectionError if cannot get response
+    from the above resources.
+    """
     cbr_url = 'http://www.cbr.ru/scripts/XML_daily_eng.asp'
     poloniex_url = 'https://poloniex.com/public?'
     try:
@@ -26,11 +31,15 @@ def _load_codes():
     except Exception:
         raise ConnectionError('Can not get data from poloniex.com')
     crypto_cur_codes = {cur: response[cur]['name'] for cur in response}
-    cur_codes = {'common': common_cur_codes, 'crypto': crypto_cur_codes}
-    return cur_codes
+    codes = {'common': common_cur_codes, 'crypto': crypto_cur_codes}
+    return codes
 
 
-def _save_codes(cur_codes: dict):
+def _save_codes(cur_codes):
+    """
+    Creates, if necessary, the 'codes' folder where CSV files with code-currency
+    pairs are saved
+    """
     dir_name = os.path.dirname(_common_codes_file_name)
     if not os.path.isdir(dir_name):
         os.mkdir(dir_name)
@@ -45,11 +54,15 @@ def _save_codes(cur_codes: dict):
         writer.writerows(common_cur_codes)
 
 
-def get_codes() -> dict:
+def get_codes():
+    """
+    Uploads a code-currency pairs from files, if they exist, otherwise
+    downloads and saves pairs, using _load_codes and _save_codes functions
+    """
     if not (os.path.isfile(_common_codes_file_name) and os.path.isfile(_crypto_codes_file_name)):
-        cur_codes = _load_codes()
-        _save_codes(cur_codes)
-        return cur_codes
+        codes = _load_codes()
+        _save_codes(codes)
+        return codes
     with open(_common_codes_file_name, 'r', newline='') as file:
         reader = csv.reader(file)
         common_cur_codes = {row[0]: row[1] for row in reader}
@@ -60,7 +73,10 @@ def get_codes() -> dict:
     return cur_codes
 
 
-def _is_some_code(code: str, cur_type: str):
+def _is_some_code(code, cur_type):
+    """
+    Checks whether the code is a crypto or regular currency code.
+    """
     if not (os.path.isfile(_common_codes_file_name) and os.path.isfile(_crypto_codes_file_name)):
         cur_codes = _load_codes()
         _save_codes(cur_codes)
@@ -72,9 +88,15 @@ def _is_some_code(code: str, cur_type: str):
     return False
 
 
-def is_common_code(code: str):
+def is_common_code(code):
+    """
+    Checks whether the code is a regular currency code.
+    """
     return _is_some_code(code, 'common')
 
 
-def is_crypto_code(code: str):
+def is_crypto_code(code):
+    """
+    Checks whether the code is a crypto currency code.
+    """
     return _is_some_code(code, 'crypto')
